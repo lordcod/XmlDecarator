@@ -1,14 +1,18 @@
 from typing import Any, get_args, get_origin
-import lxml.etree as ET
-from lxml.etree import Element, ElementBase
+from lxml.etree import ElementBase
 from xmlbind.models import (XmlAttribute, XmlElementData,
                             XmlElement, XmlElementWrapper)
 xml_objects = (XmlAttribute, XmlElementData,
                XmlElement, XmlElementWrapper)
 
 
+def get_valid_annot(annot: Any):
+    return annot
+
+
 def _parse_annot(annot: Any):
-    if issubclass(annot, XmlRoot):
+    annot = get_valid_annot(annot)
+    if type(annot) is type and issubclass(annot, XmlRoot):
         return annot
     elif get_origin(annot) is not None:
         return get_args(annot)[0]
@@ -16,7 +20,8 @@ def _parse_annot(annot: Any):
 
 
 def _is_annot_list(annot: Any):
-    if issubclass(annot, XmlRoot):
+    annot = get_valid_annot(annot)
+    if type(annot) is type and issubclass(annot, XmlRoot):
         return False
     elif get_origin(annot) is not None:
         return True
@@ -31,6 +36,7 @@ class XmlRoot:
                 value._setup(name)
             if isinstance(value, XmlElementWrapper):
                 annot = annotations[name]
+                annot = get_valid_annot(annot)
                 value._setup(name, annot.__name__, _is_annot_list(annot))
             if isinstance(value, XmlAttribute):
                 value._setup(name)
@@ -44,7 +50,8 @@ class XmlRoot:
                 setattr(self, name, value._parse(_parse_annot(annotations[name]),
                                                  element.find(value.name)))
             if isinstance(value, XmlAttribute):
-                setattr(self, name, value._parse(annotations[name], element.get(value.name)))
+                annot = get_valid_annot(annotations[name])
+                setattr(self, name, value._parse(annot, element.get(value.name)))
             if isinstance(value, XmlElementData):
                 setattr(self, name, value._parse(element.find(value.name)))
         return self

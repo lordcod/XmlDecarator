@@ -22,9 +22,9 @@ class XmlElement:
             self.name = name.upper()
 
     def _parse(self, root: 'XmlRoot', data: ElementBase):
-        if not data:
+        if data is None:
             if self.required:
-                raise DataNotFoundError
+                raise DataNotFoundError(root, self.name)
             return
 
         return root._parse(data)

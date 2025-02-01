@@ -32,7 +32,7 @@ class XmlElementWrapper:
     def _parse(self, root: 'XmlRoot', data: ElementBase):
         if not (data is not None and len(data) > 0 and data.findall(self.element_name)):
             if self.required:
-                raise DataNotFoundError
+                raise DataNotFoundError(self.name, self.element_name)
             return
 
         elements = data.findall(self.element_name)

@@ -29,8 +29,10 @@ class XmlAttribute:
             data = self.adapter.unmarshal(data)
         elif compiler := get_compiler(_type):
             data = compiler.unmarshal(data)
+        elif issubclass(_type, Enum):
+            self.enum = _type
 
-        if not data:
+        if data is None:
             if self.required:
                 raise DataNotFoundError
             return

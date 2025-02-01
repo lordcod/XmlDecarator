@@ -1,29 +1,40 @@
 from enum import Enum
 from typing import Any, List, Optional, Type, Union
 
+from xmlbind.compiler import XmlCompiler
 from xmlbind.exceptions import DataNotFoundError, ValidateError
-from .adapter import XmlAdapter
+from xmlbind.settings import get_compiler
 
 
 class XmlAttribute:
     def __init__(
         self,
-        name: str,
+        name: Optional[str] = None,
         *,
         required: bool = False,
         enum: Optional[Union[Enum, Type]] = None,
-        adapter: Optional[XmlAdapter] = None
+        adapter: Optional[XmlCompiler] = None
     ):
         self.name = name
         self.required = required
         self.enum = enum
         self.adapter = adapter
 
-    def _parse(self, data: Any):
+    def _setup(self,  name: str) -> None:
+        if self.name is None:
+            self.name = name
+
+    def _parse(self, _type: Type, data: Any):
         if self.adapter:
-            data = self.adapter(data)
-        if not data and self.required:
-            raise DataNotFoundError
+            data = self.adapter.unmarshal(data)
+        elif compiler := get_compiler(_type):
+            data = compiler.unmarshal(data)
+
+        if not data:
+            if self.required:
+                raise DataNotFoundError
+            return
+
         if self.enum is not None:
             try:
                 data = self.enum(data)

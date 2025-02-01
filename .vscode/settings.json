@@ -1,0 +1,22 @@
+{
+    "python.terminal.activateEnvironment": true,
+    "python.analysis.autoImportCompletions": true,
+    "explorer.autoReveal": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8",
+        "editor.formatOnSave": true
+    },
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportInvalidStringEscapeSequence": "none",
+        "reportImplicitStringConcatenation": "none",
+        "reportMissingImports": "none"
+    },
+    "flake8.args": [
+        "--max-line-length=120",
+        // "--ignore=E402",
+    ],
+    "autopep8.args": [
+        "--max-line-length=180",
+        // "--indent-size 0"
+    ]
+}

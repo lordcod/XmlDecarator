@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Any, Optional
 from xmlbind.exceptions import DataNotFoundError
-from .adapter import XmlAdapter
 from .element import XmlElement
 from lxml.etree import ElementBase
 
@@ -11,27 +10,34 @@ if TYPE_CHECKING:
 class XmlElementWrapper:
     def __init__(
         self,
-        name: str,
-        element_name: str,
+        name: Optional[str] = None,
+        element_name: Optional[str] = None,
         *,
         required: bool = False,
-        with_list: Optional[bool] = None,
-        adapter: Optional[XmlAdapter[ElementBase, ElementBase]] = None
+        with_list: Optional[bool] = None
     ):
         self.name = name
         self.element_name = element_name
         self.required = required
         self.with_list = with_list
-        self.adapter = adapter
+
+    def _setup(self, name: str, element_name: str, with_list: bool) -> None:
+        if self.name is None:
+            self.name = name.upper()
+        if self.element_name is None:
+            self.element_name = element_name.upper()
+        if self.with_list is None:
+            self.with_list = with_list
 
     def _parse(self, root: 'XmlRoot', data: ElementBase):
-        if self.adapter:
-            data = self.adapter(data)
-        if self.required and (
-            not data
-            or not data.findall(self.element_name)
-        ):
-            raise DataNotFoundError
+        if not (data is not None and len(data) > 0 and data.findall(self.element_name)):
+            if self.required:
+                raise DataNotFoundError
+            return
+
         elements = data.findall(self.element_name)
         ret = [root._parse(el) for el in elements]
-        return ret if self.with_list else len(ret) > 0 and ret[0]
+        if self.with_list:
+            return ret
+        elif len(ret) > 0:
+            return ret[0]

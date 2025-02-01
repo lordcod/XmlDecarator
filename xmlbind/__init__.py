@@ -1,5 +1,5 @@
 from .root import XmlRoot
-from .models import (XmlAdapter, XmlAttribute, XmlElementData,
+from .models import (XmlAttribute, XmlElementData,
                      XmlElement, XmlElementWrapper)
-__all__ = (XmlRoot, XmlAdapter, XmlAttribute, XmlElementData,
+__all__ = (XmlRoot, XmlAttribute, XmlElementData,
            XmlElement, XmlElementWrapper)

@@ -91,6 +91,8 @@ class XmlRoot:
             elif compiler := get_compiler(type(atr)):
                 atr = compiler.marshal(atr)
 
+            if not atr:
+                continue
             attrib[value.name] = atr
 
         el = Element(

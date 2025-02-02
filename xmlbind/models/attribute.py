@@ -1,3 +1,4 @@
+import contextlib
 from enum import Enum
 from typing import Any, List, Optional, Type, Union
 
@@ -38,9 +39,10 @@ class XmlAttribute:
             return
 
         if self.enum is not None:
-            try:
-                data = self.enum(data)
-            except TypeError as exc:
-                raise ValidateError from exc
+            with contextlib.suppress(ValueError):
+                return self.enum(data)
+            with contextlib.suppress(AttributeError):
+                return getattr(self.enum, data)
+            raise ValidateError from None
 
         return data

@@ -25,6 +25,9 @@ class DtCompiler(XmlCompiler[datetime]):
     def unmarshal(self, v):
         return datetime.strptime(v, "%Y-%m-%d")
 
+    def marshal(self, v):
+        return datetime.strftime(v, "%Y-%m-%d")
+
 
 if __name__ == '__main__':
     add_compiler(DtCompiler())
@@ -34,3 +37,7 @@ if __name__ == '__main__':
     lenex = Lenex._parse(element)
 
     print(lenex, lenex.version, lenex.meet)
+
+    element2 = lenex.dump('Lenex')
+    text = ET.tostring(element2, xml_declaration=True, method='xml')
+    open('test2.xml', 'wb').write(text)

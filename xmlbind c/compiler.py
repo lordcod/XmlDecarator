@@ -7,7 +7,7 @@ T = TypeVar('T')
 class XmlCompiler(Generic[T]):
     def __init__(self, validate_type: Union[Type[T], Enum]):
         self.validate_type = validate_type
-    
+
     def unmarshal(self, v: str) -> T:
         raise NotImplementedError
 

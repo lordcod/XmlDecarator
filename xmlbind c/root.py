@@ -3,12 +3,8 @@ from lxml.etree import ElementBase, Element
 from xmlbind.models import (XmlAttribute, XmlElementData,
                             XmlElement, XmlElementWrapper)
 from xmlbind.settings import get_compiler
-from xmlbind.exceptions import DataNotFoundError
 xml_objects = (XmlAttribute, XmlElementData,
                XmlElement, XmlElementWrapper)
-
-class ParseError(Exception):
-    pass
 
 
 def get_valid_annot(annot: Any):
@@ -34,22 +30,6 @@ def _is_annot_list(annot: Any):
 
 
 class XmlRoot:
-    def __init__(self, **kwargs) -> None:
-        cls = type(self)
-
-        for k, v in kwargs.items():
-            if v is None:
-                continue
-
-            if not isinstance(getattr(cls, k),
-                              (XmlAttribute, XmlElementWrapper, XmlElement)):
-                raise TypeError(
-                    'It is impossible to assign a key value to %s' % k)
-
-            setattr(self, k, v)
-
-        self._ofter_init()
-
     def __init_subclass__(cls):
         annotations = cls.__annotations__
         for name, value in cls.__dict__.items():
@@ -62,35 +42,19 @@ class XmlRoot:
             if isinstance(value, XmlAttribute):
                 value._setup(name)
 
-    def _ofter_init(self) -> None:
-        for name, value in self.__class__.__dict__.items():
-            if not isinstance(value, (XmlElement, XmlAttribute, XmlElementWrapper)):
-                continue
-            if name in self.__dict__:
-                continue
-            if value.required:
-                raise DataNotFoundError(name)
-            if isinstance(value, XmlElementWrapper) and value.with_list:
-                setattr(self, name, [])
-            else:
-                setattr(self, name, None)
-
     @classmethod
     def _parse(cls, element: ElementBase):
-        self = cls.__new__(cls)
+        self = cls()
         annotations = cls.__annotations__
         for name, value in cls.__dict__.items():
-            try:
-                if isinstance(value, (XmlElement, XmlElementWrapper)):
-                    setattr(self, name, value._parse(_parse_annot(annotations[name]),
-                                                    element.find(value.name)))
-                if isinstance(value, XmlAttribute):
-                    annot = get_valid_annot(annotations[name])
-                    setattr(self, name, value._parse(annot, element.get(value.name)))
-                if isinstance(value, XmlElementData):
-                    setattr(self, name, value._parse(element.find(value.name)))
-            except Exception as exc:
-                raise ParseError('Processing error on the %s %s element, tag root: %s' % (value.name, type(value).__name__, element.tag)) from exc
+            if isinstance(value, (XmlElement, XmlElementWrapper)):
+                setattr(self, name, value._parse(_parse_annot(annotations[name]),
+                                                 element.find(value.name)))
+            if isinstance(value, XmlAttribute):
+                annot = get_valid_annot(annotations[name])
+                setattr(self, name, value._parse(annot, element.get(value.name)))
+            if isinstance(value, XmlElementData):
+                setattr(self, name, value._parse(element.find(value.name)))
         return self
 
     def dump(self, tag: Optional[str] = None, /) -> ElementBase:
@@ -102,9 +66,7 @@ class XmlRoot:
         for name, value in data.items():
             if not isinstance(value, (XmlRoot, list)):
                 continue
-            if isinstance(value, list) and (len(value) == 0 or not isinstance(value[0], XmlRoot)):
-                continue
-            
+
             xml_element = cls_data[name]
             if isinstance(xml_element, XmlElement):
                 element = value.dump(xml_element.name)
@@ -122,16 +84,8 @@ class XmlRoot:
         for name, value in cls_data.items():
             if not isinstance(value, XmlAttribute):
                 continue
-            
-            try:
-                atr = data[name]
-            except KeyError as ke:
-                if value.required:
-                    raise
-                else:
-                    print(ke, name, data)
-                    continue
-            
+
+            atr = data[name]
             if value.adapter:
                 data = value.adapter.unmarshal(data)
             elif compiler := get_compiler(type(atr)):

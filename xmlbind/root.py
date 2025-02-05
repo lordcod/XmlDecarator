@@ -7,6 +7,7 @@ from xmlbind.exceptions import DataNotFoundError
 xml_objects = (XmlAttribute, XmlElementData,
                XmlElement, XmlElementWrapper)
 
+
 class ParseError(Exception):
     pass
 
@@ -83,7 +84,7 @@ class XmlRoot:
             try:
                 if isinstance(value, (XmlElement, XmlElementWrapper)):
                     setattr(self, name, value._parse(_parse_annot(annotations[name]),
-                                                    element.find(value.name)))
+                                                     element.find(value.name)))
                 if isinstance(value, XmlAttribute):
                     annot = get_valid_annot(annotations[name])
                     setattr(self, name, value._parse(annot, element.get(value.name)))
@@ -104,7 +105,7 @@ class XmlRoot:
                 continue
             if isinstance(value, list) and (len(value) == 0 or not isinstance(value[0], XmlRoot)):
                 continue
-            
+
             xml_element = cls_data[name]
             if isinstance(xml_element, XmlElement):
                 element = value.dump(xml_element.name)
@@ -122,7 +123,7 @@ class XmlRoot:
         for name, value in cls_data.items():
             if not isinstance(value, XmlAttribute):
                 continue
-            
+
             try:
                 atr = data[name]
             except KeyError as ke:
@@ -131,7 +132,7 @@ class XmlRoot:
                 else:
                     print(ke, name, data)
                     continue
-            
+
             if value.adapter:
                 data = value.adapter.unmarshal(data)
             elif compiler := get_compiler(type(atr)):

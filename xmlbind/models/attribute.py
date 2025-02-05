@@ -43,6 +43,8 @@ class XmlAttribute:
                 return self.enum(data)
             with contextlib.suppress(AttributeError):
                 return getattr(self.enum, data)
-            raise ValidateError('Not found enum %s value %s attr %s' % (self.enum.__name__, data, self.name)) from None
+            if self.required:
+                raise ValidateError('Not found enum %s value %s attr %s' % (self.enum.__name__, data, self.name)) from None
+            return
 
         return data

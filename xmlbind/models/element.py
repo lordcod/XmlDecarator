@@ -1,4 +1,3 @@
-from tkinter.messagebox import RETRY
 from typing import TYPE_CHECKING, Any, Optional
 from lxml.etree import ElementBase
 from xmlbind.exceptions import DataNotFoundError

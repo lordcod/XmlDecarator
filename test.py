@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 import lxml.etree as ET
 from xmlbind.compiler import XmlCompiler
 from xmlbind.root import XmlRoot
@@ -15,7 +16,7 @@ class Meet(XmlRoot):
 
 class Lenex(XmlRoot):
     version: str = XmlAttribute()
-    meet: Meet = XmlElementWrapper('MEETS', 'MEET')
+    meet: List[Meet] = XmlElementWrapper('MEET')
 
 
 class DtCompiler(XmlCompiler[datetime]):

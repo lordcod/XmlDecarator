@@ -10,12 +10,21 @@ if TYPE_CHECKING:
 class XmlElementWrapper:
     def __init__(
         self,
-        name: Optional[str] = None,
-        element_name: Optional[str] = None,
+        name: str = ...,
+        element_name: str = ...,
         *,
         required: bool = False,
         with_list: Optional[bool] = None
     ):
+        if name is None and element_name is not Ellipsis:
+            name = Ellipsis
+        if name is not Ellipsis and element_name is Ellipsis:
+            element_name = name
+            name = Ellipsis
+        elif name is Ellipsis and element_name is Ellipsis:
+            element_name = None
+            name = None
+
         self.name = name
         self.element_name = element_name
         self.required = required

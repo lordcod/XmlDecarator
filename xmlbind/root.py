@@ -83,15 +83,19 @@ class XmlRoot:
         for name, value in cls.__dict__.items():
             try:
                 if isinstance(value, (XmlElement, XmlElementWrapper)):
-                    setattr(self, name, value._parse(_parse_annot(annotations[name]),
-                                                     element.find(value.name)))
+                    if value.name is Ellipsis and isinstance(value, XmlElementWrapper):
+                        res = element
+                    else:
+                        res = element.find(value.name)
+
+                    setattr(self, name, value._parse(_parse_annot(annotations[name]), res))
                 if isinstance(value, XmlAttribute):
                     annot = get_valid_annot(annotations[name])
                     setattr(self, name, value._parse(annot, element.get(value.name)))
                 if isinstance(value, XmlElementData):
                     setattr(self, name, value._parse(element.find(value.name)))
             except Exception as exc:
-                raise ParseError('Processing error on the %s %s element, tag root: %s' % (value.name, type(value).__name__, element.tag)) from exc
+                raise ParseError('Processing error on the %s %s %s element, tag root: %s' % (self, value.name, type(value).__name__, element.tag)) from exc
         return self
 
     def dump(self, tag: Optional[str] = None, /) -> ElementBase:
@@ -109,16 +113,21 @@ class XmlRoot:
             xml_element = cls_data[name]
             if isinstance(xml_element, XmlElement):
                 element = value.dump(xml_element.name)
+                children.append(element)
             elif isinstance(xml_element, XmlElementWrapper):
                 if isinstance(value, XmlRoot):
                     elements = [value.dump(xml_element.element_name)]
                 else:
                     elements = [v.dump(xml_element.element_name) for v in value]
-                element = Element(xml_element.name)
-                element.extend(elements)
+
+                if xml_element.name is Ellipsis:
+                    children.extend(elements)
+                else:
+                    element = Element(xml_element.name)
+                    element.extend(elements)
+                    children.append(element)
             else:
                 raise ValueError('The data type for class %s was not found.' % name)
-            children.append(element)
 
         for name, value in cls_data.items():
             if not isinstance(value, XmlAttribute):
